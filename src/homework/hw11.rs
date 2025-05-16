@@ -1,65 +1,71 @@
 use rand::Rng;
 
-fn count_permutation(shipments: &Vec<u32>) -> isize {
-    let total: u32 = shipments.iter().sum();
-    let n = shipments.len() as u32;
-
-    if total % n != 0 {
-        return -1; 
-    }
-
-    let average = total / n;
-    let mut moves = 0;
-
-    for &weight in shipments {
-        if weight > average {
-            moves += weight - average;
-        }
-    }
-
-    moves as isize
+fn gen_random_vector(n: usize) -> Vec<i32> {
+    let mut rng = rand::thread_rng();
+    (0..n).map(|_| rng.gen_range(10..=99)).collect()
 }
 
-fn gen_shipments(n: usize) -> Vec<u32> {
-    let mut rng = rand::thread_rng();
-    let avg = rng.gen_range(1..=10);
-    let mut shipments = vec![avg; n];
+fn min_adjacent_sum(data: &[i32]) -> (usize, i32) {
+    let mut min_sum = i32::MAX;
+    let mut min_index = 0;
 
-    for _ in 0..(n / 2) {
-        let from = rng.gen_range(0..n);
-        let to = rng.gen_range(0..n);
-        if shipments[from] > 0 && from != to {
-            let delta = rng.gen_range(1..=shipments[from].min(3));
-            shipments[from] -= delta;
-            shipments[to] += delta;
+    for i in 0..data.len() - 1 {
+        let sum = data[i] + data[i + 1];
+        if sum < min_sum {
+            min_sum = sum;
+            min_index = i;
         }
     }
 
-    shipments
+    (min_index, min_sum)
+}
+
+fn print_vector_info(data: &[i32]) {
+    let (idx, min_sum) = min_adjacent_sum(data);
+
+
+    print!("indexes: ");
+    for i in 0..data.len() {
+        print!("{:>3}.", i);
+    }
+    println!();
+
+    print!("data:    [");
+    for (i, val) in data.iter().enumerate() {
+        if i != data.len() - 1 {
+            print!("{:>2}, ", val);
+        } else {
+            print!("{:>2}", val);
+        }
+    }
+    println!("]");
+
+    print!("indexes: ");
+    for i in 0..data.len() {
+        if i == idx {
+            print!("{:>width$}", "\\__ ", width = 4);
+        } else if i == idx + 1 {
+            print!("{:>width$}", "__/ ", width = 4);
+        } else {
+            print!("{:>4}", "");
+        }
+    }
+    println!();
+
+    println!(
+        "min adjacent sum={}+{}={} at indexes:{},{}",
+        data[idx],
+        data[idx + 1],
+        min_sum,
+        idx,
+        idx + 1
+    );
+    println!();
 }
 
 fn main() {
-    let examples = vec![
-        vec![8, 2, 2, 4, 4],
-        vec![9, 3, 7, 2, 9],
-        vec![1, 1, 1, 1, 6], 
-    ];
-
-    for (i, shipment) in examples.iter().enumerate() {
-        println!("Example {}:", i + 1);
-        println!("Shipments: {:?}", shipment);
-        let answer = count_permutation(shipment);
-        if answer == -1 {
-            println!("Result: Impossible to balance\n");
-        } else {
-            println!("Minimum moves needed: {}\n", answer);
-        }
+    for _ in 0..4 {
+        let data = gen_random_vector(20);
+        print_vector_info(&data);
     }
-  
-    let generated = gen_shipments(6);
-    println!("Generated shipments: {:?}", generated);
-    println!(
-        "Moves needed to balance: {}\n",
-        count_permutation(&generated)
-    );
 }
